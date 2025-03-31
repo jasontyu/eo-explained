@@ -3,16 +3,27 @@ import path from "path"
 import matter from "gray-matter"
 import { compareDesc, format, parseISO } from "date-fns"
 import { getSiteUrl, siteConfig } from "@/lib/config"
+import { remark } from "remark"
+import html from "remark-html"
+
+// Function to convert markdown to HTML
+async function markdownToHtml(markdown: string) {
+  const result = await remark().use(html).process(markdown)
+  return result.toString()
+}
 
 export async function GET() {
   // Get all posts
   const postsDirectory = path.join(process.cwd(), "posts")
   const filenames = fs.readdirSync(postsDirectory)
 
-  const posts = filenames.map((filename) => {
+  const postsPromises = filenames.map(async (filename) => {
     const filePath = path.join(postsDirectory, filename)
     const fileContents = fs.readFileSync(filePath, "utf8")
     const { data, content } = matter(fileContents)
+
+    // Convert markdown content to HTML
+    const contentHtml = await markdownToHtml(content)
 
     return {
       slug: filename.replace(".md", ""),
@@ -22,9 +33,11 @@ export async function GET() {
         excerpt: string
         tags: string[]
       },
-      content,
+      content: contentHtml,
     }
   })
+
+  const posts = await Promise.all(postsPromises)
 
   // Sort posts by date
   const sortedPosts = posts.sort((a, b) => {
