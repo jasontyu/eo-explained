@@ -4,7 +4,7 @@
 
 // Hard-coded site URL instead of using environment variables
 export function getSiteUrl(): string {
-  return "https://executive-orders-explained.vercel.app"
+  return "https://eo-explained.vercel.app"
 }
 
 // Site metadata
